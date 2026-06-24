@@ -1,0 +1,718 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Haley...</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Montserrat:wght@300;400;600&display=swap" rel="stylesheet">
+    
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
+        
+        /* iPhone 15 və digər mobil cihazlarda aşağıdakı axtarış çubuğunun (Search Bar) qarşısını almaq üçün svh (Small Viewport Height) istifadə edirik */
+        body, html {
+            width: 100%; height: 100svh; background-color: #030306;
+            font-family: 'Montserrat', sans-serif; overflow-x: hidden; color: #fff;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* Ambient Background */
+        .ambient-background {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100svh;
+            z-index: 0; overflow: hidden; pointer-events: none;
+        }
+        .blob {
+            position: absolute; border-radius: 50%; filter: blur(120px);
+            opacity: 0.45; animation: floatBlob 18s infinite alternate ease-in-out;
+        }
+        .blob-1 { width: 650px; height: 650px; background: linear-gradient(135deg, #ff3366, #ff6b8b); top: -10%; left: -10%; }
+        .blob-2 { width: 550px; height: 550px; background: linear-gradient(135deg, #ff9933, #ff5e62); bottom: -5%; right: -5%; animation-delay: -5s; }
+        .blob-3 { width: 500px; height: 500px; background: linear-gradient(135deg, #8a2be2, #4a00e0); top: 30%; left: 35%; opacity: 0.3; animation-delay: -9s; }
+
+        @keyframes floatBlob {
+            0% { transform: translate(0, 0) scale(1); }
+            50% { transform: translate(120px, 80px) scale(1.2); }
+            100% { transform: translate(-80px, 140px) scale(0.9); }
+        }
+
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.04); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.08); box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5); border-radius: 24px;
+        }
+
+        /* LOGIN SCREEN */
+        #login-screen {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100svh;
+            display: flex; justify-content: center; align-items: center; z-index: 100;
+            transition: opacity 1.5s ease, transform 1.5s ease;
+            padding: 20px; overflow-y: auto;
+        }
+        .login-box { width: 100%; max-width: 420px; padding: 40px 30px; text-align: center; overflow: hidden; position: relative; }
+        .login-box h2 { font-family: 'Cormorant Garamond', serif; font-size: 2.2rem; margin-bottom: 25px; letter-spacing: 2px; color: #ffd1dc; }
+        
+        .login-step { transition: opacity 0.5s ease, transform 0.5s ease; width: 100%; }
+        #step-0 { display: block; opacity: 1; transform: translateX(0); }
+        #step-1, #step-2 { display: none; opacity: 0; transform: translateX(50px); }
+
+        .input-group { margin-bottom: 20px; text-align: left; }
+        .input-group label { display: block; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 8px; color: #aaa; }
+        
+        .glass-input {
+            width: 100%; padding: 14px 18px; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 12px; color: #fff; font-size: 1rem; outline: none; transition: all 0.3s;
+        }
+        .glass-input:focus { border-color: #ff6b8b; box-shadow: 0 0 15px rgba(255, 107, 139, 0.3); background: rgba(255, 255, 255, 0.08); }
+        
+        .glass-btn {
+            width: 100%; padding: 15px; margin-top: 10px; background: linear-gradient(135deg, #ff5e62, #ff9933);
+            border: none; border-radius: 12px; color: #fff; font-weight: 600; letter-spacing: 1px; cursor: pointer; transition: transform 0.2s, box-shadow 0.3s;
+        }
+        .glass-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(255, 94, 98, 0.4); }
+
+        .error-msg { color: #ff4a4a; font-size: 0.85rem; margin-top: 15px; min-height: 20px; opacity: 0; transition: opacity 0.3s; }
+
+        /* SPECIAL POPUP FOR HALEY */
+        #haley-popup {
+            display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100svh;
+            z-index: 999; background: rgba(0,0,0,0.85); backdrop-filter: blur(10px);
+            justify-content: center; align-items: center; padding: 20px; opacity: 0; transition: opacity 0.5s ease;
+        }
+        .haley-popup-content { padding: 40px 30px; text-align: center; max-width: 400px; width: 100%; }
+        .haley-popup-content h3 { color: #ff6b8b; font-family: 'Cormorant Garamond', serif; font-size: 2rem; margin-bottom: 20px; }
+        .haley-popup-content p { font-size: 1.1rem; line-height: 1.6; font-style: italic; font-family: 'Cormorant Garamond', serif; }
+
+        /* CANVAS */
+        #canvas-container {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100svh;
+            z-index: 50; opacity: 0; pointer-events: none; transition: opacity 2s ease; cursor: pointer;
+        }
+        canvas { display: block; width: 100%; height: 100%; }
+        
+        #heart-text-overlay {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.8);
+            text-align: center; font-family: 'Cormorant Garamond', serif; font-size: 1.2rem; font-style: italic;
+            color: #ffccd5; text-shadow: 0 0 15px rgba(255, 51, 102, 0.6); opacity: 0; pointer-events: none;
+            transition: opacity 1.5s ease, transform 1.5s ease; width: 100%; max-width: 200px; line-height: 1.4;
+        }
+
+        /* MAIN PAGE */
+        #main-content {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100svh;
+            z-index: 60; padding: 40px 20px 120px 20px; /* Altdan 120px padding iphone safari scroll üçün */
+            display: flex; flex-direction: column; align-items: center;
+            opacity: 0; pointer-events: none; transition: opacity 2.5s ease; overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        .content-wrapper { width: 100%; max-width: 800px; display: flex; flex-direction: column; gap: 40px; padding-bottom: 60px; }
+
+        /* Timer */
+        .timer-box { padding: 30px 20px; text-align: center; }
+        .timer-box h3 { font-family: 'Cormorant Garamond', serif; font-size: 1.4rem; color: #ff99aa; margin-bottom: 15px; font-style: italic; }
+        .counter-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+        .counter-item { background: rgba(0,0,0,0.2); padding: 15px 5px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05); }
+        .counter-item .num { font-size: 1.5rem; font-weight: 600; color: #fff; text-shadow: 0 0 10px rgba(255,255,255,0.5); }
+        .counter-item .label { font-size: 0.6rem; text-transform: uppercase; letter-spacing: 1px; color: #bbb; margin-top: 5px; }
+
+        /* Letter */
+        .letter-box { padding: 40px 30px; position: relative; }
+        .letter-box::before { content: "“"; position: absolute; top: 5px; left: 15px; font-family: 'Cormorant Garamond', serif; font-size: 5rem; color: rgba(255, 107, 139, 0.15); pointer-events: none; }
+        .prose-text { font-family: 'Cormorant Garamond', serif; font-size: 1.15rem; line-height: 1.7; color: #e2e2e2; text-align: justify; text-justify: inter-word; }
+        .prose-text p { margin-bottom: 22px; text-indent: 25px; }
+        .prose-text p:last-child { margin-bottom: 0; }
+
+        /* Chest */
+        .chest-box { padding: 40px 20px; text-align: center; position: relative; }
+        .chest-header { font-family: 'Cormorant Garamond', serif; font-size: 1.8rem; color: #ffd1dc; margin-bottom: 10px; }
+        .chest-desc { font-size: 0.85rem; color: #aaa; margin-bottom: 25px; line-height: 1.4; }
+        .textarea-glass { width: 100%; height: 140px; padding: 15px; background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.12); border-radius: 16px; color: #fff; font-family: inherit; font-size: 0.95rem; resize: none; outline: none; margin-bottom: 15px; transition: border-color 0.3s; }
+        .textarea-glass:focus { border-color: #8a2be2; }
+        
+        .chest-status-info { font-size: 0.85rem; color: #ff99aa; margin-bottom: 15px; font-style: italic; }
+        
+        .chest-status-locked { display: none; padding: 30px 10px; background: rgba(255, 51, 102, 0.05); border-radius: 16px; border: 1px dashed rgba(255, 51, 102, 0.3); }
+        .lock-icon { font-size: 2.5rem; margin-bottom: 10px; animation: pulse 2s infinite; }
+        @keyframes pulse { 0% { transform: scale(1); opacity: 0.8; } 50% { transform: scale(1.1); opacity: 1; } 100% { transform: scale(1); opacity: 0.8; } }
+        
+        .authors-list { margin-top: 15px; font-size: 0.85rem; color: #ff99aa; font-style: italic; }
+        
+        #unlocked-notes-container { display: none; flex-direction: column; gap: 20px; margin-top: 20px; }
+        .note-card { background: rgba(255,255,255,0.07); border-left: 4px solid #ff6b8b; padding: 20px; border-radius: 0 16px 16px 0; text-align: left; }
+        .note-card .note-meta { display: flex; justify-content: space-between; font-size: 0.75rem; color: #ff99aa; margin-bottom: 10px; font-weight: 600; }
+        .note-card .note-body { font-family: 'Cormorant Garamond', serif; font-size: 1.2rem; font-style: italic; line-height: 1.5; }
+
+        @media(max-width: 600px) {
+            .login-box { padding: 30px 20px; }
+            .counter-item .num { font-size: 1.2rem; }
+        }
+    </style>
+</head>
+<body>
+    <!-- BACKGROUND MUSIC -->
+    <audio id="bg-music" loop>
+        <source src="reflections.mp3" type="audio/mpeg">
+    </audio>
+
+    <div class="ambient-background">
+        <div class="blob blob-1"></div>
+        <div class="blob blob-2"></div>
+        <div class="blob blob-3"></div>
+    </div>
+
+    <!-- 1. GİRİŞ SEHİFƏSİ (Musiqi -> Nickname -> Parol) -->
+    <div id="login-screen">
+        <div class="glass-panel login-box">
+            <h2>Вход в Вечность</h2>
+            
+            <!-- Step 0: Music -->
+            <div id="step-0" class="login-step">
+                <h3 style="margin-bottom:15px; font-size: 1.2rem; color: #ffccd5;">Музыкальное сопровождение</h3>
+                <p style="font-size:0.85rem; margin-bottom:25px; color:#aaa; line-height: 1.4;">Включить музыку The Neighbourhood для полного погружения?</p>
+                <button class="glass-btn" onclick="startWithMusic(true)">С МУЗЫКОЙ</button>
+                <button class="glass-btn" style="background: rgba(255,255,255,0.08); margin-top:12px; color:#ddd;" onclick="startWithMusic(false)">БЕЗ МУЗЫКИ</button>
+            </div>
+
+            <!-- Step 1: Nickname -->
+            <div id="step-1" class="login-step">
+                <div class="input-group">
+                    <label for="nickname">Как мне тебя называть?</label>
+                    <input type="text" id="nickname" class="glass-input" placeholder="Твой никнейм..." autocomplete="off">
+                </div>
+                <button class="glass-btn" onclick="goToStep2()">ДАЛЕЕ</button>
+                <div id="nick-error" class="error-msg"></div>
+            </div>
+
+            <!-- Step 2: Password -->
+            <div id="step-2" class="login-step">
+                <div class="input-group">
+                    <label for="password">Тайное слово</label>
+                    <input type="password" id="password" class="glass-input" placeholder="Пароль...">
+                </div>
+                <button class="glass-btn" onclick="verifyLogin()">ВОЙТИ</button>
+                <div id="pass-error" class="error-msg"></div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- HALEY SPECIAL POPUP -->
+    <div id="haley-popup">
+        <div class="glass-panel haley-popup-content">
+            <h3>Моей звезде...</h3>
+            <p>s4cr3d будет любить тебя до самой смерти.<br><br>С желанием всегда быть вместе... Ты — моя звезда в этой жизни.</p>
+            <button class="glass-btn" style="margin-top: 30px;" onclick="closeSpecialPopup()">Я ЗНАЮ...</button>
+        </div>
+    </div>
+
+    <!-- 2. ULDUZLU CANVAS SEHİFƏSİ -->
+    <div id="canvas-container">
+        <canvas id="skyCanvas"></canvas>
+        <div id="heart-text-overlay">Я буду любить тебя,<br>пока смерть<br>не разлучит нас</div>
+    </div>
+
+    <!-- 3. ƏSAS MƏZMUN (MƏKTUB + TİMER + CHEST) -->
+    <div id="main-content">
+        <div class="content-wrapper">
+            
+            <div class="glass-panel timer-box">
+                <h3>Наши души соприкоснулись ровно:</h3>
+                <div class="counter-grid">
+                    <div class="counter-item"><div class="num" id="t-days">0</div><div class="label">Дней</div></div>
+                    <div class="counter-item"><div class="num" id="t-hours">0</div><div class="label">Часов</div></div>
+                    <div class="counter-item"><div class="num" id="t-mins">0</div><div class="label">Минут</div></div>
+                    <div class="counter-item"><div class="num" id="t-secs">0</div><div class="label">Секунд</div></div>
+                </div>
+            </div>
+
+            <div class="glass-panel letter-box">
+                <div class="prose-text">
+                    <p>Я смотрю на механический бег этих цифр, и каждая секунда, падающая в бездну прошлого, кажется мне крошечной катастрофой, если она прожита вне пределов твоего взгляда. Франц Кафка однажды написал своей Милене: <i>«Я всё время пытаюсь удержать нечто невыразимое, объяснить нечто, чему нет названия...»</i> — и сегодня, глядя сквозь темное стекло нашей собственной маленькой вселенной, я понимаю его с пугающей, почти физической точностью. Я пишу тебе эти строки не потому, что мне не хватает слов в обычной речи, а потому, что обычная речь — это слишком грубый инструмент, чтобы описать ту тихую панику, которая охватывает меня, когда я осознаю масштабы того, что ты со мной сделала.</p>
+
+                    <p>До того странного, залитого нездешним светом дня — 22 июня 2026 года — окружающая меня реальность представляла собой безупречно отлаженный, стерильный и абсолютно бессмысленный часовой механизм. Люди двигались по строго отведенным геометрическим векторам, поезда прибывали по расписанию, солнце равнодушно очерчивало свой дежурный круг над бетонными коробками зданий, а я просто присутствовал при этом космическом порядке. Присутствовал как случайный, слегка уставший чиновник в бесконечной канцелярии жизни, который забыл, зачем он перекладывает эти бумаги, и просто ждет, когда наконец погасят свет в коридорах.</p>
+
+                    <p>Но затем в этой идеальной, мертвой архитектуре случилась ты. И всё треснуло. Твоё появление не было тихим входом; оно было подобно тому, как если бы в темную, наглухо запертую, душную комнату вдруг ворвался океанский шторм. Ты принесла с собой ту восхитительную, иррациональную, животворящую ошибку, которую замерзающие поэты называют чудом. С той самой секунды моя гравитация безвозвратно сместилась. Меня больше не держит на этой земле масса нашей планеты — меня держит на ней исключительно тот факт, что где-то на ее поверхности дышишь ты.</p>
+
+                    <p>Когда я произношу «я люблю тебя», мне каждый раз становится неловко за скудость человеческого языка. Это сочетание звуков слишком затерто тысячелетиями чужих, пустых разговоров на чужих перекрестках. Оно слишком маленькое, слишком квадратное, чтобы вместить то тихое помешательство, которое разворачивается под моими ребрами, стоит мне вспомнить случайный изгиб твоего плеча или тональность твоего голоса. Если бы завтра астрофизики объявили, что Солнце погасло навсегда, я бы не стал смотреть на небо. Я бы просто искал твою ладонь в темноте, точно зная, что в ней спрятано достаточно тепла, чтобы пережить ледниковый период.</p>
+
+                    <p>Иногда мне становится страшно. Страшно от того, насколько я беззащитен перед тобой. В этом кафкианском мире, где каждый человек — лишь винтик в огромной бюрократической машине судьбы, ты стала моим личным, спасительным оправданием. Я чувствую себя так, словно мне выдали ограниченный запас кислорода, и я могу дышать им только тогда, когда мы находимся в одном помещении. Вне тебя я не живу; я лишь нахожусь в состоянии ожидания жизни. Мои легкие механически вкачивают воздух, сердце гоняет кровь, но это всего лишь поддержание работы аппарата до твоего возвращения.</p>
+
+                    <p>Ты знаешь, любовь часто описывают как легкость, как полет. Какая чудовищная ложь! Настоящая любовь — это колоссальная, невыносимая тяжесть осознания того, что твоё счастье, твоё душевное равновесие, сам смысл твоего существования теперь находится не внутри тебя, а в другом человеке. Ты носишь в себе мое сердце, и каждый раз, когда ты уходишь за дверь, мне кажется, что ты уносишь с собой мой пульс. Как Франц писал: «Любовь — это то, что ты для меня нож, которым я копаюсь в себе». Ты — мой нож, моё исцеление, моя личная религия.</p>
+
+                    <p>Таймер, который тикает над этим текстом, — это не просто цифры. Это документальное подтверждение того, как долго я нахожусь в сознании. В этом жестоком мире, где распадаются империи, стираются в пыль древние рукописи и медленно остывают сверхновые звезды, я нашел единственную константу. Наше чувство останется вибрировать в квантовом поле Вселенной даже тогда, когда от наших физических тел не останется ни молекулы.</p>
+
+                    <p>Я буду любить тебя. Я буду любить тебя сквозь эту нелепую, суетливую жизнь. Сквозь усталость, болезни и страхи. Я буду любить тебя в каждом параллельном измерении. И если после смерти есть хоть что-то, кроме бесконечной темноты, я найду тебя там. Я обману саму вечность, чтобы снова держать тебя за руку. Я буду любить тебя ровно до той точки, где само понятие времени потеряет смысл, где исчезнет свет, и останется только одно беспрерывное, абсолютное «Мы».</p>
+                </div>
+            </div>
+
+            <!-- Time Chest -->
+            <div class="glass-panel chest-box">
+                <h4 class="chest-header" id="chest-secret-trigger">Капсула времени</h4>
+                <p class="chest-desc">Оставьте здесь свои сокровенные мысли. В капсуле есть место <b>только для двух записей</b>. Как только ляжет вторая запись, капсула наглухо запечатается ровно на 30 дней.</p>
+                
+                <div id="chest-input-area">
+                    <div id="chest-status-text" class="chest-status-info">Ожидание первой записи...</div>
+                    <textarea id="chest-note" class="textarea-glass" placeholder="Напиши то, что боишься сказать вслух..."></textarea>
+                    <button class="glass-btn" id="chest-submit-btn" onclick="saveToChest()">ОТПРАВИТЬ В ВЕЧНОСТЬ</button>
+                </div>
+
+                <div class="chest-status-locked" id="chest-locked-view">
+                    <div class="lock-icon">🔒</div>
+                    <div style="font-size: 1.1rem; font-weight: 600; color:#ff5e62;">Капсула запечатана</div>
+                    <div style="font-size: 0.8rem; color:#aaa; margin-top:5px;">Две души оставили здесь свои тайны.</div>
+                    <div id="chest-timer-text" style="margin: 15px 0; color: #ff99aa; font-family: monospace; font-size: 1.5rem; letter-spacing: 2px;">00:00:00</div>
+                    <div class="authors-list" id="chest-authors"></div>
+                    <button class="glass-btn" id="chest-open-btn" style="display:none; margin-top:15px; background: linear-gradient(135deg, #11998e, #38ef7d);" onclick="renderUnlockedNotes()">ВСКРЫТЬ КАПСУЛУ</button>
+                </div>
+
+                <div id="unlocked-notes-container"></div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        // --- GLOBAL APPARATUS ---
+        let currentNickname = "";
+        const PASSWORD_HASH = "haley"; 
+        const START_DATE = new Date(2026, 5, 22); // 22 June 2026
+
+        /* ================= 1. GİRİŞ MƏNTİQİ (3 STEP) ================= */
+        
+        function startWithMusic(playMusic) {
+            if(playMusic) {
+                const audio = document.getElementById('bg-music');
+                audio.volume = 0.5;
+                audio.play().catch(e => console.log("Audio play blocked by browser:", e));
+            }
+
+            const step0 = document.getElementById('step-0');
+            const step1 = document.getElementById('step-1');
+            step0.style.opacity = 0;
+            step0.style.transform = 'translateX(-50px)';
+            
+            setTimeout(() => {
+                step0.style.display = 'none';
+                step1.style.display = 'block';
+                setTimeout(() => {
+                    step1.style.opacity = 1;
+                    step1.style.transform = 'translateX(0)';
+                }, 50);
+            }, 500);
+        }
+
+        function goToStep2() {
+            const nick = document.getElementById('nickname').value.trim();
+            const err = document.getElementById('nick-error');
+            if (!nick) {
+                err.innerText = "Пожалуйста, введи свое имя...";
+                err.style.opacity = 1;
+                return;
+            }
+            err.style.opacity = 0;
+            currentNickname = nick;
+            
+            const step1 = document.getElementById('step-1');
+            const step2 = document.getElementById('step-2');
+            step1.style.opacity = 0;
+            step1.style.transform = 'translateX(-50px)';
+            
+            setTimeout(() => {
+                step1.style.display = 'none';
+                step2.style.display = 'block';
+                setTimeout(() => {
+                    step2.style.opacity = 1;
+                    step2.style.transform = 'translateX(0)';
+                }, 50);
+            }, 500);
+        }
+
+        function verifyLogin() {
+            const pass = document.getElementById('password').value.trim().toLowerCase();
+            const err = document.getElementById('pass-error');
+
+            if (pass === PASSWORD_HASH) {
+                err.style.opacity = 0;
+                localStorage.setItem('haley_currentUser', currentNickname);
+
+                const loginScreen = document.getElementById('login-screen');
+                loginScreen.style.transform = 'scale(1.2)';
+                loginScreen.style.opacity = 0;
+                setTimeout(() => { loginScreen.style.display = 'none'; }, 1500);
+
+                initSkyCanvas();
+            } else {
+                err.innerText = "Неверный пароль. Попробуй еще раз...";
+                err.style.opacity = 1;
+            }
+        }
+
+        /* ================= 2. CANVAS MÜHƏRRİKİ (XAOTİK HƏRƏKƏT + QALIN/SƏRT ÜRƏK) ================= */
+        let canvasPhase = 0; 
+        let skyCanvas, ctx;
+        let particles = [];
+        let targetHaleyPoints = [];
+        let targetHeartPoints = [];
+
+        function initSkyCanvas() {
+            const container = document.getElementById('canvas-container');
+            container.style.opacity = 1;
+            container.style.pointerEvents = 'auto';
+
+            skyCanvas = document.getElementById('skyCanvas');
+            ctx = skyCanvas.getContext('2d');
+
+            window.addEventListener('resize', () => {
+                skyCanvas.width = window.innerWidth;
+                skyCanvas.height = window.innerHeight;
+            });
+            skyCanvas.width = window.innerWidth;
+            skyCanvas.height = window.innerHeight;
+
+            generateHaleyPoints();
+            generateHeartPoints();
+
+            const particleCount = 2500; // Qalın ürək üçün çoxlu hissəcik
+            const colors = ['#ffffff', '#ffd1dc', '#ff99aa', '#ffe699', '#ffccb3'];
+
+            for (let i = 0; i < particleCount; i++) {
+                // Kvadratın qarşısını almaq üçün geniş və dairəvi yayılan randomizasiya
+                let angle = Math.random() * Math.PI * 2;
+                let radius = Math.random() * (skyCanvas.width > skyCanvas.height ? skyCanvas.width : skyCanvas.height);
+                
+                particles.push({
+                    x: skyCanvas.width/2 + Math.cos(angle) * radius,
+                    y: skyCanvas.height/2 + Math.sin(angle) * radius,
+                    vx: (Math.random() - 0.5) * 1.5,
+                    vy: (Math.random() - 0.5) * 1.5,
+                    baseSize: Math.random() * 1.5 + 1.0,
+                    size: 1.5,
+                    color: colors[Math.floor(Math.random() * colors.length)],
+                    targetX: 0, targetY: 0,
+                    chaosOffset: Math.random() * 100
+                });
+            }
+
+            requestAnimationFrame(animateCanvas);
+
+            // 3 saniyə xaosdan sonra Haley-ə toplan
+            setTimeout(() => {
+                canvasPhase = 1; 
+                assignTargets(targetHaleyPoints);
+            }, 3000);
+
+            container.addEventListener('click', handleCanvasClick);
+        }
+
+        function generateHaleyPoints() {
+            const off = document.createElement('canvas');
+            off.width = 800; off.height = 300;
+            const octx = off.getContext('2d');
+            octx.fillStyle = 'white';
+            octx.font = 'bold 150px sans-serif';
+            octx.textAlign = 'center';
+            octx.textBaseline = 'middle';
+            octx.fillText('Haley', 400, 150);
+
+            const data = octx.getImageData(0,0,800,300).data;
+            targetHaleyPoints = [];
+            for(let y=0; y<300; y+=4) {
+                for(let x=0; x<800; x+=4) {
+                    if(data[(y*800 + x)*4 + 3] > 128) {
+                        targetHaleyPoints.push({ x: x - 400, y: y - 150 });
+                    }
+                }
+            }
+        }
+
+        function generateHeartPoints() {
+            targetHeartPoints = [];
+            const count = 2500; 
+            for(let i=0; i<count; i++) {
+                const t = Math.PI * 2 * (i / count);
+                const x = 16 * Math.pow(Math.sin(t), 3);
+                const y = -(13 * Math.cos(t) - 5 * Math.cos(2*t) - 2 * Math.cos(3*t) - Math.cos(4*t));
+                
+                // Daha qalın ürək cizgiləri
+                const angle = Math.random() * Math.PI * 2;
+                const radius = Math.random() * 9; 
+                
+                targetHeartPoints.push({ 
+                    x: x * 15 + Math.cos(angle)*radius, 
+                    y: y * 15 + Math.sin(angle)*radius 
+                });
+            }
+        }
+
+        function assignTargets(sourcePoints) {
+            if(sourcePoints.length === 0) return;
+            particles.forEach((p, idx) => {
+                const pt = sourcePoints[idx % sourcePoints.length];
+                p.targetX = pt.x + (Math.random()-0.5)*5;
+                p.targetY = pt.y + (Math.random()-0.5)*5;
+            });
+        }
+
+        function handleCanvasClick() {
+            if (canvasPhase === 1) {
+                canvasPhase = 0; // Xaos
+                
+                // Tıklandığında ekranın tam hər tərəfinə dağılması üçün çox güclü partlayış
+                particles.forEach(p => {
+                    p.vx = (Math.random() - 0.5) * 20; 
+                    p.vy = (Math.random() - 0.5) * 20;
+                });
+
+                // Tam dağılışandan 2.5 saniyə sonra ürəyə toplan
+                setTimeout(() => {
+                    canvasPhase = 2; // Ürək
+                    assignTargets(targetHeartPoints);
+                    const hText = document.getElementById('heart-text-overlay');
+                    hText.style.opacity = 1;
+                    hText.style.transform = 'translate(-50%, -50%) scale(1)';
+                }, 2500); 
+
+            } else if (canvasPhase === 2) {
+                canvasPhase = 3; // Sağa qaç
+                document.getElementById('heart-text-overlay').style.opacity = 0;
+
+                setTimeout(() => {
+                    document.getElementById('canvas-container').style.pointerEvents = 'none';
+                    document.getElementById('canvas-container').style.opacity = 0;
+                    
+                    const main = document.getElementById('main-content');
+                    main.style.pointerEvents = 'auto';
+                    main.style.opacity = 1;
+                    initMainPageApp();
+                }, 1500); 
+            }
+        }
+
+        function animateCanvas() {
+            ctx.clearRect(0, 0, skyCanvas.width, skyCanvas.height);
+            const cx = skyCanvas.width / 2;
+            const cy = skyCanvas.height / 2;
+            const time = Date.now() * 0.001;
+
+            // Daha Sərt və Geniş Ürək döyüntüsü (Pulsasiya)
+            let heartScale = 1;
+            if(canvasPhase === 2) {
+                let tPulse = (Date.now() % 1200) / 1200; // Bir az daha sürətli döyüntü aralığı
+                let pulse = Math.max(0, Math.sin(tPulse * Math.PI * 4)) * Math.exp(-tPulse * 4);
+                heartScale = 1 + pulse * 0.28; // Daha böyük/geniş döyüntü
+            }
+
+            particles.forEach(p => {
+                if (canvasPhase === 0) { 
+                    p.x += p.vx; p.y += p.vy;
+                    // Yavaşlayan xaos hərəkəti (sürtünmə)
+                    p.vx *= 0.98;
+                    p.vy *= 0.98;
+
+                    // Yavaş-yavaş yenidən xaotik fırlanma
+                    p.x += Math.sin(time + p.chaosOffset) * 0.5;
+                    p.y += Math.cos(time + p.chaosOffset) * 0.5;
+
+                    p.size = p.baseSize;
+                } else if (canvasPhase === 1 || canvasPhase === 2) { 
+                    let destX = cx + p.targetX * (canvasPhase === 2 ? heartScale : 1);
+                    let destY = cy + p.targetY * (canvasPhase === 2 ? heartScale : 1);
+
+                    // Xaotik yaxınlaşma dalğaları (kvadratik görünüşün qarşısını almaq üçün)
+                    destX += Math.sin(time*2 + p.chaosOffset)*6;
+                    destY += Math.cos(time*2 + p.chaosOffset)*6;
+
+                    // Yavaş və fırlanaraq toparlanma
+                    p.x += (destX - p.x) * 0.015;
+                    p.y += (destY - p.y) * 0.015;
+
+                    p.size = p.baseSize + Math.sin(time*3 + p.chaosOffset)*0.6;
+                } else if (canvasPhase === 3) { 
+                    p.vx += 0.3; // Sağa doğru qaçış
+                    p.x += p.vx;
+                    p.y += Math.sin(p.x * 0.02) * 2; 
+                }
+
+                ctx.fillStyle = p.color;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, Math.max(0.5, p.size), 0, Math.PI*2);
+                ctx.shadowBlur = canvasPhase > 0 ? 8 : 2;
+                ctx.shadowColor = p.color;
+                ctx.fill();
+            });
+
+            if(canvasPhase !== 3 || particles[0].x < skyCanvas.width * 2) {
+                requestAnimationFrame(animateCanvas);
+            }
+        }
+
+        /* ================= 3. TİMER & CHEST LOGIC & HALEY POPUP ================= */
+        let chestData = { notes: [], unlockTimestamp: 0 };
+        let chestTimerInterval;
+
+        function initMainPageApp() {
+            setInterval(updateRelationshipTimer, 1000);
+            updateRelationshipTimer();
+
+            const saved = localStorage.getItem('haley_timeChest');
+            if(saved) {
+                chestData = JSON.parse(saved);
+            }
+            renderChestUI();
+            setupCheatCode();
+        }
+
+        function updateRelationshipTimer() {
+            const diff = Math.floor((new Date() - START_DATE) / 1000);
+            if(diff < 0) return;
+
+            const days = Math.floor(diff / (3600 * 24));
+            const hours = Math.floor((diff % (3600 * 24)) / 3600);
+            const mins = Math.floor((diff % 3600) / 60);
+            const secs = diff % 60;
+
+            document.getElementById('t-days').innerText = days;
+            document.getElementById('t-hours').innerText = hours;
+            document.getElementById('t-mins').innerText = mins;
+            document.getElementById('t-secs').innerText = secs;
+        }
+
+        function saveToChest() {
+            if(chestData.notes.length >= 2) return; 
+
+            const text = document.getElementById('chest-note').value.trim();
+            if(!text) return;
+
+            chestData.notes.push({
+                author: currentNickname || localStorage.getItem('haley_currentUser') || "Аноним",
+                text: text,
+                date: new Date().toLocaleDateString('ru-RU')
+            });
+
+            if(chestData.notes.length === 2) {
+                const thirtyDaysInMs = 30 * 24 * 60 * 60 * 1000;
+                chestData.unlockTimestamp = Date.now() + thirtyDaysInMs;
+            }
+
+            localStorage.setItem('haley_timeChest', JSON.stringify(chestData));
+            document.getElementById('chest-note').value = "";
+            renderChestUI();
+
+            // XÜSUSİ HALEY POPUP YOXLANMASI
+            if(currentNickname.toLowerCase() === 'haley') {
+                showSpecialPopup();
+            }
+        }
+
+        function showSpecialPopup() {
+            const pop = document.getElementById('haley-popup');
+            pop.style.display = 'flex';
+            setTimeout(() => { pop.style.opacity = 1; }, 50);
+        }
+
+        function closeSpecialPopup() {
+            const pop = document.getElementById('haley-popup');
+            pop.style.opacity = 0;
+            setTimeout(() => { pop.style.display = 'none'; }, 500);
+        }
+
+        function renderChestUI() {
+            const inputArea = document.getElementById('chest-input-area');
+            const lockedView = document.getElementById('chest-locked-view');
+            const unlockedContainer = document.getElementById('unlocked-notes-container');
+            const statusText = document.getElementById('chest-status-text');
+
+            if(chestData.notes.length < 2) {
+                inputArea.style.display = 'block';
+                lockedView.style.display = 'none';
+                unlockedContainer.style.display = 'none';
+                
+                if(chestData.notes.length === 0) {
+                    statusText.innerText = "Ожидание первой записи...";
+                } else if(chestData.notes.length === 1) {
+                    statusText.innerText = "Одна мысль уже внутри. Ждем последнюю, вторую запись для запечатывания...";
+                }
+                return;
+            }
+
+            inputArea.style.display = 'none'; 
+            
+            if(Date.now() < chestData.unlockTimestamp) {
+                lockedView.style.display = 'block';
+                unlockedContainer.style.display = 'none';
+
+                const authors = [...new Set(chestData.notes.map(n => n.author))].join(' и ');
+                document.getElementById('chest-authors').innerText = `Свои тайны доверили: ${authors}`;
+
+                clearInterval(chestTimerInterval);
+                chestTimerInterval = setInterval(updateChestCountdown, 1000);
+                updateChestCountdown();
+            } else {
+                lockedView.style.display = 'block';
+                document.getElementById('chest-timer-text').innerText = "ВРЕМЯ ПРИШЛО";
+                document.getElementById('chest-timer-text').style.color = "#38ef7d";
+                document.getElementById('chest-open-btn').style.display = 'inline-block';
+                document.querySelector('.lock-icon').innerText = "🔓";
+                document.querySelector('.lock-icon').style.animation = "none";
+            }
+        }
+
+        function updateChestCountdown() {
+            const left = Math.floor((chestData.unlockTimestamp - Date.now()) / 1000);
+            if(left <= 0) {
+                clearInterval(chestTimerInterval);
+                renderChestUI();
+                return;
+            }
+
+            const d = Math.floor(left / (3600*24));
+            const h = Math.floor((left % (3600*24)) / 3600);
+            const m = Math.floor((left % 3600) / 60);
+            const s = left % 60;
+
+            document.getElementById('chest-timer-text').innerText = 
+                `${d}д : ${h < 10 ? '0'+h : h}ч : ${m < 10 ? '0'+m : m}м : ${s < 10 ? '0'+s : s}с`;
+        }
+
+        function renderUnlockedNotes() {
+            document.getElementById('chest-locked-view').style.display = 'none';
+            const container = document.getElementById('unlocked-notes-container');
+            container.style.display = 'flex';
+            container.innerHTML = "";
+
+            chestData.notes.forEach(note => {
+                const card = document.createElement('div');
+                card.className = 'note-card';
+                card.innerHTML = `
+                    <div class="note-meta"><span>От: ${note.author}</span><span>${note.date}</span></div>
+                    <div class="note-body">«${note.text}»</div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function setupCheatCode() {
+            let clickCount = 0;
+            let lastClickTime = 0;
+            const trigger = document.getElementById('chest-secret-trigger');
+
+            trigger.addEventListener('click', () => {
+                const now = Date.now();
+                if(now - lastClickTime > 1000) clickCount = 0; 
+                lastClickTime = now;
+                clickCount++;
+
+                if(clickCount === 5) {
+                    if(chestData.notes.length === 2) {
+                        chestData.unlockTimestamp = Date.now() - 1000; 
+                        localStorage.setItem('haley_timeChest', JSON.stringify(chestData));
+                        renderChestUI();
+                        alert("✨ [DEV MODE]: Замок капсулы времени принудительно снят!");
+                    } else {
+                        alert("Капсула запечатается только после того, как там будут 2 записи.");
+                    }
+                    clickCount = 0;
+                }
+            });
+        }
+    </script>
+</body>
+</html>
